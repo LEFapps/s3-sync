@@ -1,35 +1,34 @@
 # s3-sync - Asynchronous recursive file & directory copying to S3
 
-Based on [ncp](https://github.com/AvianFlu/ncp).
+Based on [ncp](https://github.com/AvianFlu/ncp), s3-sync recursively copies a directory to an S3 bucket.
 
 [![Build Status](https://secure.travis-ci.org/AvianFlu/ncp.png)](http://travis-ci.org/AvianFlu/ncp)
 
-Think `cp -r`, but pure node, and asynchronous.  `ncp` can be used both as a CLI tool and programmatically.
+Think `cp -r`, but pure node, and asynchronous.  `s3-sync` can be used both as a CLI tool and programmatically, e.g. from within a lambda function.
 
 ## Command Line usage
- 
-Usage is simple: `ncp [source] [dest] [--limit=concurrency limit]
-[--filter=filter] --stopOnErr`
+
+Usage: `s3-sync [source] [bucket] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region]`
 
 The 'filter' is a Regular Expression - matched files will be copied.
 
-The 'concurrency limit' is an integer that represents how many pending file system requests `ncp` has at a time.
+The 'concurrency limit' is an integer that represents how many pending file system requests are run at a time.
 
-'stoponerr' is a boolean flag that will tell `ncp` to stop immediately if any
+'stoponerr' is a boolean flag that will stop copying immediately if any
 errors arise, rather than attempting to continue while logging errors. The default behavior is to complete as many copies as possible, logging errors along the way.
 
-If there are no errors, `ncp` will output `done.` when complete.  If there are errors, the error messages will be logged to `stdout` and to `./ncp-debug.log`, and the copy operation will attempt to continue.
+If there are no errors, output is `done.` when complete.  If there are errors, the error messages will be logged to `stdout` and to `./s3-sync-debug.log`, and the copy operation will attempt to continue.
 
 ## Programmatic usage
- 
-Programmatic usage of `ncp` is just as simple.  The only argument to the completion callback is a possible error.  
+  
+Programmatic usage of `s3-sync` is just as simple.  The only argument to the completion callback is a possible error.  
 
 ```javascript
-var ncp = require('ncp').ncp;
+var s3_sync = require('s3_sync');
 
-ncp.limit = 16;
+s3_sync.limit = 16;
 
-ncp(source, destination, function (err) {
+s3_sync(source, bucket, options, function (err) {
  if (err) {
    return console.error(err);
  }
@@ -37,8 +36,8 @@ ncp(source, destination, function (err) {
 });
 ```
 
-You can also call ncp like `ncp(source, destination, options, callback)`. 
-`options` should be a dictionary. Currently, such options are available:
+Options:
+  * `options.aws` __(required)__: - AWS configuration options. This should include `region`, `accessKeyId` and `secretAccessKey`.
 
   * `options.filter` - a `RegExp` instance, against which each file name is
   tested to determine whether to copy it or not, or a function taking single
