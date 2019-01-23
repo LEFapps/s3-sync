@@ -1,24 +1,28 @@
 {
-  "name": "ncp",
-  "version": "2.0.0",
-  "author": "AvianFlu <charlie@charlieistheman.com>",
-  "description": "Asynchronous recursive file copy utility.",
+  "name": "s3-sync",
+  "version": "1.0.0",
+  "author": "Thomas Goorden <tg@eenwereldmetlef.be>",
+  "description": "Asynchronous recursive file copy to S3 utility.",
   "bin": {
-    "ncp": "./bin/ncp"
+    "s3-sync": "./bin/sync"
   },
   "devDependencies": {
     "mocha": "1.15.x",
     "rimraf": "1.0.x",
     "read-dir-files": "0.0.x"
   },
-  "main": "./lib/ncp.js",
+  "main": "./lib/s3-sync.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AvianFlu/ncp.git"
+    "url": "https://github.com/LEFApps/s3-sync.git"
   },
   "keywords": [
     "cli",
-    "copy"
+    "copy",
+    "s3",
+    "lambda",
+    "recursive",
+    "directory"
   ],
   "license": "MIT",
   "engine": {
@@ -26,5 +30,8 @@
   },
   "scripts": {
     "test": "mocha -R spec"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.392.0"
   }
 }

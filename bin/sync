@@ -1,14 +1,11 @@
 #!/usr/bin/env node
 
-
-
-
-var ncp = require('../lib/ncp'),
+var s3_sync = require('../lib/s3-sync'),
     args = process.argv.slice(2),
     source, dest;
 
 if (args.length < 2) {
-  console.error('Usage: ncp [source] [destination] [--filter=filter] [--limit=concurrency limit]');
+  console.error('Usage: s3_sync [source] [bucket] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region]');
   process.exit(1);
 }
 
@@ -17,7 +14,7 @@ function startsWith(str, prefix) {
   return str.substr(0, prefix.length) == prefix;
 }
 
-var options = {};
+var options = {aws:{}};
 args.forEach(function (arg) {
   if (startsWith(arg, "--limit=")) {
     options.limit = parseInt(arg.split('=', 2)[1], 10);
@@ -25,12 +22,23 @@ args.forEach(function (arg) {
   if (startsWith(arg, "--filter=")) {
     options.filter = new RegExp(arg.split('=', 2)[1]);
   }
+  if (startsWith(arg, "--accessKeyId=")) {
+    options.aws.accessKeyId = arg.split('=', 2)[1];
+  }
+  if (startsWith(arg, "--secretAccessKey=")) {
+    options.aws.secretAccessKey = arg.split('=', 2)[1];
+  }
+  if (startsWith(arg, "--region=")) {
+    options.aws.region = arg.split('=', 2)[1];
+  }
   if (startsWith(arg, "--stoponerr")) {
     options.stopOnErr = true;
   }
 });
 
-ncp.ncp(args[0], args[1], options, function (err) {
+console.log(options);
+
+s3_sync(args[0], args[1], options, function (err) {
   if (Array.isArray(err)) {
     console.error('There were errors during the copy.');
     err.forEach(function (err) {

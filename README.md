@@ -1,11 +1,13 @@
-# ncp - Asynchronous recursive file & directory copying
+# s3-sync - Asynchronous recursive file & directory copying to S3
+
+Based on [ncp](https://github.com/AvianFlu/ncp).
 
 [![Build Status](https://secure.travis-ci.org/AvianFlu/ncp.png)](http://travis-ci.org/AvianFlu/ncp)
 
 Think `cp -r`, but pure node, and asynchronous.  `ncp` can be used both as a CLI tool and programmatically.
 
 ## Command Line usage
-
+ 
 Usage is simple: `ncp [source] [dest] [--limit=concurrency limit]
 [--filter=filter] --stopOnErr`
 
@@ -19,7 +21,7 @@ errors arise, rather than attempting to continue while logging errors. The defau
 If there are no errors, `ncp` will output `done.` when complete.  If there are errors, the error messages will be logged to `stdout` and to `./ncp-debug.log`, and the copy operation will attempt to continue.
 
 ## Programmatic usage
-
+ 
 Programmatic usage of `ncp` is just as simple.  The only argument to the completion callback is a possible error.  
 
 ```javascript
