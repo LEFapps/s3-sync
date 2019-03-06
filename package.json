@@ -32,6 +32,7 @@
     "test": "mocha -R spec"
   },
   "dependencies": {
-    "aws-sdk": "^2.392.0"
+    "aws-sdk": "^2.392.0",
+    "md5-file": "^4.0.0"
   }
 }
