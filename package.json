@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.392.0",
-    "md5-file": "^4.0.0"
+    "md5-file": "^4.0.0",
+    "mime-types": "^2.1.22"
   }
 }
