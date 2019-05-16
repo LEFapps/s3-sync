@@ -1,6 +1,6 @@
 {
   "name": "s3-sync",
-  "version": "1.0.0",
+  "version": "3.0.1",
   "author": "Thomas Goorden <tg@eenwereldmetlef.be>",
   "description": "Asynchronous recursive file copy to S3 utility.",
   "bin": {
@@ -32,8 +32,8 @@
     "test": "mocha -R spec"
   },
   "dependencies": {
-    "aws-sdk": "^2.392.0",
+    "aws-sdk": "^2.456.0",
     "md5-file": "^4.0.0",
-    "mime-types": "^2.1.22"
+    "mime-types": "^2.1.24"
   }
 }
