@@ -1,6 +1,6 @@
 {
   "name": "s3-sync",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "author": "Thomas Goorden <tg@eenwereldmetlef.be>",
   "description": "Asynchronous recursive file copy to S3 utility.",
   "bin": {
