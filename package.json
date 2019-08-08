@@ -1,8 +1,8 @@
 {
   "name": "s3-sync",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "author": "Thomas Goorden <tg@eenwereldmetlef.be>",
-  "description": "Asynchronous recursive file copy to S3 utility.",
+  "description": "Asynchronous recursive file copy to S3 utility and invalidate (update) the associated CloudFront distribution.",
   "bin": {
     "s3-sync": "./bin/sync"
   },
@@ -11,7 +11,7 @@
     "rimraf": "1.0.x",
     "read-dir-files": "0.0.x"
   },
-  "main": "./lib/s3-sync.js",
+  "main": "./lib/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/LEFApps/s3-sync.git"

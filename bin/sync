@@ -1,57 +1,88 @@
 #!/usr/bin/env node
 
-var s3_sync = require('../lib/s3-sync'),
-    args = process.argv.slice(2),
-    source, dest;
+var { syncS3, invalidateCloudFront } = require('../lib/')
+
+console.log(syncS3)
+console.log(invalidateCloudFront)
+
+var args = process.argv.slice(2)
 
 if (args.length < 2) {
-  console.error('Usage: s3-sync [source] [bucket] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region] [--stoponerr] [--quiet]');
-  process.exit(1);
+  console.error('Usage: s3-sync [source] [bucket] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region] --cloudFrontId=[CloudFront Distribution ID] [--stoponerr] [--quiet]')
+  process.exit(1)
 }
 
 // parse arguments the hard way
-function startsWith(str, prefix) {
-  return str.substr(0, prefix.length) == prefix;
+function startsWith (str, prefix) {
+  return str.substr(0, prefix.length) === prefix
 }
 
-var options = {aws:{}};
+var options = { aws: {} }
 args.forEach(function (arg) {
-  if (startsWith(arg, "--limit=")) {
-    options.limit = parseInt(arg.split('=', 2)[1], 10);
+  if (startsWith(arg, '--limit=')) {
+    options.limit = parseInt(arg.split('=', 2)[1], 10)
   }
-  if (startsWith(arg, "--filter=")) {
-    options.filter = new RegExp(arg.split('=', 2)[1]);
+  if (startsWith(arg, '--filter=')) {
+    options.filter = new RegExp(arg.split('=', 2)[1])
   }
-  if (startsWith(arg, "--accessKeyId=")) {
-    options.aws.accessKeyId = arg.split('=', 2)[1];
+  if (startsWith(arg, '--accessKeyId=')) {
+    options.aws.accessKeyId = arg.split('=', 2)[1]
   }
-  if (startsWith(arg, "--secretAccessKey=")) {
-    options.aws.secretAccessKey = arg.split('=', 2)[1];
+  if (startsWith(arg, '--secretAccessKey=')) {
+    options.aws.secretAccessKey = arg.split('=', 2)[1]
   }
-  if (startsWith(arg, "--region=")) {
-    options.aws.region = arg.split('=', 2)[1];
+  if (startsWith(arg, '--region=')) {
+    options.aws.region = arg.split('=', 2)[1]
   }
-  if (startsWith(arg, "--stoponerr")) {
-    options.stopOnErr = true;
+  if (startsWith(arg, '--cloudFrontId=')) {
+    options.cloudFrontId = arg.split('=', 2)[1]
   }
-  if (startsWith(arg, "--quiet")) {
-    options.quiet = true;
+  if (startsWith(arg, '--stoponerr')) {
+    options.stopOnErr = true
   }
-});
+  if (startsWith(arg, '--quiet')) {
+    options.quiet = true
+  }
+  if (startsWith(arg, '--public')) {
+    options.publicRead = true
+  }
+})
 
-s3_sync(args[0], args[1], options, function (err) {
+function finish (err, res) {
+  if (err) {
+    process.exit(1)
+  } else {
+    process.exit(0)
+  }
+}
+
+syncS3(args[0], args[1], options, function (err, paths) {
+  if (Array.isArray(paths) && paths.length > 0) {
+    console.log('Synchronized files:')
+    paths.forEach((path) => {
+      console.log(path)
+    })
+  }
   if (Array.isArray(err)) {
-    console.error('There were errors during the copy.');
+    console.error('There were errors during the copy.')
     err.forEach(function (err) {
-      console.error(err.stack || err.message);
-    });
-    process.exit(1);
+      console.error(err.stack || err.message)
+    })
+  } else if (err) {
+    console.error('An error has occurred.')
+    console.error(err.stack || err.message)
   }
-  else if (err) {
-    console.error('An error has occurred.');
-    console.error(err.stack || err.message);
-    process.exit(1);
+  if (!err && Array.isArray(paths) && paths.length > 0 && options.cloudFrontId) {
+    invalidateCloudFront(options.cloudFrontId, paths, (e, res) => {
+      if (e) {
+        console.log(e.stack || e.message)
+      }
+      if (res) {
+        console.log(res)
+      }
+      finish(e)
+    })
+  } else {
+    finish(err)
   }
-});
-
-
+})
