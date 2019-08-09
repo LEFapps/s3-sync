@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
-var { syncS3, invalidateCloudFront } = require('../lib/')
-
-console.log(syncS3)
-console.log(invalidateCloudFront)
-
 var args = process.argv.slice(2)
+
+const { promisify } = require('util')
+var { syncS3, invalidateCloudFront } = require('../lib/')
 
 if (args.length < 2) {
   console.error('Usage: s3-sync [source] [bucket] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region] --cloudFrontId=[CloudFront Distribution ID] [--stoponerr] [--quiet]')
@@ -48,41 +46,19 @@ args.forEach(function (arg) {
   }
 })
 
-function finish (err, res) {
-  if (err) {
-    process.exit(1)
-  } else {
-    process.exit(0)
-  }
-}
-
-syncS3(args[0], args[1], options, function (err, paths) {
+async function run () {
+  const paths = await promisify(syncS3)(args[0], args[1], options)
   if (Array.isArray(paths) && paths.length > 0) {
     console.log('Synchronized files:')
     paths.forEach((path) => {
       console.log(path)
     })
+    if (options.cloudFrontId) {
+      const url = await invalidateCloudFront(options.cloudFrontId, paths, options)
+      console.log('CloudFront location:')
+      console.log(url)
+    }
   }
-  if (Array.isArray(err)) {
-    console.error('There were errors during the copy.')
-    err.forEach(function (err) {
-      console.error(err.stack || err.message)
-    })
-  } else if (err) {
-    console.error('An error has occurred.')
-    console.error(err.stack || err.message)
-  }
-  if (!err && Array.isArray(paths) && paths.length > 0 && options.cloudFrontId) {
-    invalidateCloudFront(options.cloudFrontId, paths, (e, res) => {
-      if (e) {
-        console.log(e.stack || e.message)
-      }
-      if (res) {
-        console.log(res)
-      }
-      finish(e)
-    })
-  } else {
-    finish(err)
-  }
-})
+}
+
+run().catch((e) => { console.error(e.stack || e.message || e) })
