@@ -3,10 +3,10 @@
 var args = process.argv.slice(2)
 
 const { promisify } = require('util')
-var { syncS3, invalidateCloudFront } = require('../lib/')
+var { syncS3, cleanupS3, invalidateCloudFront } = require('../lib/')
 
 if (args.length < 2) {
-  console.error('Usage: s3-sync [source] [bucket] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region] --cloudFrontId=[CloudFront Distribution ID] [--stoponerr] [--quiet]')
+  console.error('Usage: s3-sync [source] [bucket] [--cleanup] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region] --cloudFrontId=[CloudFront Distribution ID] [--stoponerr] [--quiet]')
   process.exit(1)
 }
 
@@ -38,6 +38,9 @@ args.forEach(function (arg) {
   if (startsWith(arg, '--stoponerr')) {
     options.stopOnErr = true
   }
+  if (startsWith(arg, '--cleanup')) {
+    options.cleanup = true
+  }
   if (startsWith(arg, '--quiet')) {
     options.quiet = true
   }
@@ -48,16 +51,21 @@ args.forEach(function (arg) {
 
 async function run () {
   const paths = await promisify(syncS3)(args[0], args[1], options)
-  if (Array.isArray(paths) && paths.length > 0) {
-    console.log('Synchronized files:')
-    paths.forEach((path) => {
+  if (Array.isArray(paths.changed) && paths.changed.length > 0) {
+    console.log('Updated files:')
+    paths.changed.forEach((path) => {
       console.log(path)
     })
-    if (options.cloudFrontId) {
-      const url = await invalidateCloudFront(options.cloudFrontId, paths, options)
-      console.log('CloudFront location:')
-      console.log(url)
-    }
+  }
+  console.log(JSON.stringify(paths, 2))
+  let changed = paths.changed
+  if (options.cleanup) {
+    changed = await cleanupS3(args[1], paths.changed.concat(paths.skipped), options)
+  }
+  if (options.cloudFrontId) {
+    const url = await invalidateCloudFront(options.cloudFrontId, changed, options)
+    console.log('CloudFront location:')
+    console.log(url)
   }
 }
 
