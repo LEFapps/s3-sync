@@ -3,6 +3,7 @@
   "version": "5.0.0",
   "author": "Thomas Goorden <tg@eenwereldmetlef.be>",
   "description": "Asynchronous recursive file copy to S3 utility and invalidate (update) the associated CloudFront distribution.",
+  "main": "index.js",
   "bin": {
     "s3-sync": "./bin/sync"
   },

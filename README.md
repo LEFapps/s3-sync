@@ -2,22 +2,34 @@
 
 Based on [ncp](https://github.com/AvianFlu/ncp), s3-sync recursively copies a directory to an S3 bucket.
 
-[![Build Status](https://secure.travis-ci.org/AvianFlu/ncp.png)](http://travis-ci.org/AvianFlu/ncp)
+Think `cp -r`, but pure node, and asynchronous.  `s3-sync` can be used both as a CLI tool and programmatically, e.g. from within a lambda function, or as a Serverless plugin.
 
-Think `cp -r`, but pure node, and asynchronous.  `s3-sync` can be used both as a CLI tool and programmatically, e.g. from within a lambda function.
+The biggest difference with e.g. [https://github.com/k1LoW/serverless-s3-sync](this s3-sync serverless plugin) is the fact that this library does _not_ just empty or delete the contents of the S3 bucket, but rather compares the MD5 hash (ETag) of local files with the S3 Object. In this way, it detects if the contents have changed and only uploads what is necessary. The library can also notify a CloudFront instance of paths that need invalidation, without having to invalidate the entire site.
+
+Especially for web applications that have a need for rather large static files that aren't changed often, this can make a very big difference.
+
+Links are currently not supported (yet).
 
 ## Command Line usage
 
-Usage: `s3-sync [source] [bucket] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region]`
+Usage: `s3-sync [source] [bucket] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region] --cloudFrontId=[CloudFront Distribution ID] [--cleanup] [--quiet] [--verbose]`
 
-The 'filter' is a Regular Expression - matched files will be copied.
+`source` is the directory to copy from. `bucket` is the S3 target bucket to synchronize to. `CloudFrontId` is the CloudFront instance connected to the bucket (if present). 
 
-The 'concurrency limit' is an integer that represents how many pending file system requests are run at a time.
+The `filter` is a Regular Expression - matched files will be copied.
 
-'stoponerr' is a boolean flag that will stop copying immediately if any
+The `limit` is an integer that represents how many pending file system requests are run at a time.
+
+`stoponerr` is a boolean flag that will stop copying immediately if any
 errors arise, rather than attempting to continue while logging errors. The default behavior is to complete as many copies as possible, logging errors along the way.
 
-If there are no errors, output is `done.` when complete.  If there are errors, the error messages will be logged to `stdout` and to `./s3-sync-debug.log`, and the copy operation will attempt to continue.
+`cleanup` is a boolean flag that will make the library attempt to remove objects from the S3 bucket that are *not* present on the local (source) directory. Note that this proceess will only delete S3 objects that have tag `origin` with the value `s3-sync`. This tag is added automatically to any objects created by the lib. 
+
+`verbose` will output a lot more information to the console.
+
+## Serverless plugin
+
+
 
 ## Programmatic usage
   

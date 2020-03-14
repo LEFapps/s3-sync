@@ -2,11 +2,11 @@
 
 var args = process.argv.slice(2)
 
-const { promisify } = require('util')
-var { syncS3, cleanupS3, invalidateCloudFront } = require('../lib/')
+var { syncCleanInvalidate } = require('../lib/')
+const error = require('debug')('error:s3-sync')
 
 if (args.length < 2) {
-  console.error('Usage: s3-sync [source] [bucket] [--cleanup] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region] --cloudFrontId=[CloudFront Distribution ID] [--stoponerr] [--quiet]')
+  console.error('Usage: s3-sync [source] [bucket] [--cleanup] [--filter=filter] [--limit=concurrency limit] [--accessKeyId=AWS access key] [--secretAccessKey=Secret AWS access key] --region=[region] --cloudFrontId=[CloudFront Distribution ID] [--stoponerr] [--quiet] --verbose')
   process.exit(1)
 }
 
@@ -16,6 +16,8 @@ function startsWith (str, prefix) {
 }
 
 var options = { aws: {} }
+let verbose = false
+
 args.forEach(function (arg) {
   if (startsWith(arg, '--limit=')) {
     options.limit = parseInt(arg.split('=', 2)[1], 10)
@@ -41,6 +43,9 @@ args.forEach(function (arg) {
   if (startsWith(arg, '--cleanup')) {
     options.cleanup = true
   }
+  if (startsWith(arg, '--verbose')) {
+    verbose = true
+  }
   if (startsWith(arg, '--quiet')) {
     options.quiet = true
   }
@@ -48,25 +53,13 @@ args.forEach(function (arg) {
     options.publicRead = true
   }
 })
-
-async function run () {
-  const paths = await promisify(syncS3)(args[0], args[1], options)
-  if (Array.isArray(paths.changed) && paths.changed.length > 0) {
-    console.log('Updated files:')
-    paths.changed.forEach((path) => {
-      console.log(path)
-    })
-  }
-  console.log(JSON.stringify(paths, 2))
-  let changed = paths.changed
-  if (options.cleanup) {
-    changed = await cleanupS3(args[1], paths.changed.concat(paths.skipped), options)
-  }
-  if (options.cloudFrontId) {
-    const url = await invalidateCloudFront(options.cloudFrontId, changed, options)
-    console.log('CloudFront location:')
-    console.log(url)
-  }
+if (verbose) {
+  process.env.DEBUG = 'trace:*'
+} else {
+  process.env.DEBUG = process.env.DEBUG || 'error:*'
 }
 
-run().catch((e) => { console.error(e.stack || e.message || e) })
+const source = args[0]
+const bucket = args[1]
+
+syncCleanInvalidate(source, bucket).catch((e) => { error(e.stack || e.message || e) })
