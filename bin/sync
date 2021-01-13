@@ -62,4 +62,4 @@ if (verbose) {
 const source = args[0]
 const bucket = args[1]
 
-syncCleanInvalidate(source, bucket).catch((e) => { error(e.stack || e.message || e) })
+syncCleanInvalidate(source, bucket, options).catch((e) => { error(e.stack || e.message || e) })
